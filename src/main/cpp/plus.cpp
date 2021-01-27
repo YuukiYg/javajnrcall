@@ -8,6 +8,7 @@
 //#include <opentracing/noop.h>
 #include <iostream>
 #include <string>
+#include <stdlib.h>
 using namespace datadog::opentracing;
 
 extern "C" int runcpp(int m, int n, char* t, char* s);
@@ -52,12 +53,32 @@ struct CustomCarrierReader : opentracing::TextMapReader {
     };
 
 int runcppkv(int m, int n, char** keys, char** values){
+  char *strenv;
+  char dd_hostname[256];
+  char dd_hostport[8];
+  unsigned int dd_hostport_int;
   int result;
+
+  // 環境変数からDatadog AgentのIPアドレスを受け取る。
+  if ((strenv = getenv("DD_AGENT_HOST")) != NULL) {
+    strcat(dd_hostname, strenv);
+  }else{
+    strcat(dd_hostname, "localhost");
+  }
+
+  // 環境変数からDatadog Agentのポート番号を受け取る。
+  if((strenv = getenv("DD_AGENT_PORT")) != NULL){
+    strcat(dd_hostport, strenv);
+  }else{
+    strcat(dd_hostport, "8126");
+  }
+  dd_hostport_int = atoi(dd_hostport);
+
   printf("Printing key-values pairs in CPP:\n");
   for (int i=0;*(keys+i)!=nullptr;i++){
     std::cout<<*(keys+i)<<": "<<*(values+i)<<std::endl;
   }
-  datadog::opentracing::TracerOptions tracer_options{"localhost", 8126, "cppservice"};
+  datadog::opentracing::TracerOptions tracer_options{dd_hostname, dd_hostport_int, "cppservice"};
   auto tracer = datadog::opentracing::makeTracer(tracer_options);
   {
     std::unordered_map<std::string, std::string> text_map;
@@ -79,6 +100,26 @@ int runcppkv(int m, int n, char** keys, char** values){
 
 int runcpp(int m, int n,char* t,char* s){
   int result;
+  char *strenv;
+  char dd_hostname[256];
+  char dd_hostport[8];
+  unsigned int dd_hostport_int;
+
+  // 環境変数からDatadog AgentのIPアドレスを受け取る。
+  if ((strenv = getenv("DD_AGENT_HOST")) != NULL) {
+    strcat(dd_hostname, strenv);
+  }else{
+    strcat(dd_hostname, "localhost");
+  }
+
+  // 環境変数からDatadog Agentのポート番号を受け取る。
+  if((strenv = getenv("DD_AGENT_PORT")) != NULL){
+    strcat(dd_hostport, strenv);
+  }else{
+    strcat(dd_hostport, "8126");
+  }
+  dd_hostport_int = atoi(dd_hostport);
+
   printf("Printing sid in CPP:\n");
   for (int i = 0; s[i] != '\0'; i++) {
   	printf("%c", s[i]);
@@ -90,7 +131,7 @@ int runcpp(int m, int n,char* t,char* s){
     }
   printf("\n");
 
-  datadog::opentracing::TracerOptions tracer_options{"localhost", 8126, "cppservice"};
+  datadog::opentracing::TracerOptions tracer_options{dd_hostname, dd_hostport_int, "cppservice"};
   auto tracer = datadog::opentracing::makeTracer(tracer_options);
   //auto tracer = opentracing::Tracer::Global();
   // if (opentracing::Tracer::InitGlobal(tracer)!=nullptr) {printf("Global regist ok\n");}
