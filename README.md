@@ -20,6 +20,8 @@ This application is a sample for calling C++ shared library from Java, and monit
 * Set environment variables
   * DD_LOGS_INJECTION=true
   * DATADOG_API_KEY=your_api_key
+  * DD_AGENT_HOST=your_agent_host("localhost" by default)
+  * DD_AGENT_PORT=tracer_port(8126 by default)
 
 ## How to Run
   * Compile
